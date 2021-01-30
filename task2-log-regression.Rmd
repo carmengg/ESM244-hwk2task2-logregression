@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
+
 ```
 
 
@@ -22,14 +23,40 @@ palmetto <- read_csv("palmetto.csv") %>%
 
 
 ```{r}
-#ggplot(data=palmetto, aes(x=species, y=height))+
+ggplot(data=palmetto, aes(x=height, y=length))+
+  geom_point( cex=0.2, alpha=0.2)+
+  facet_wrap(~species)+
+  labs( x= "height (cm)",
+          y= "length (cm)")
+  
 ```
 
 ```{r}
-ggplot(data=palmetto, aes(x=height, y=length))+
-  geom_point( cex=0.2, alpha=0.2)+
-  facet_wrap(~species)
-  
+ggplot(data=palmetto, aes(x=green_lvs))+
+  geom_histogram(binwidth = 1)+
+  facet_wrap(~species)+
+  labs( x = "number of green leaves (n)",
+        y = "count")
+```
+
+```{r}
+ggplot(data=palmetto, aes(x=height))+
+  geom_histogram()+
+  facet_wrap(~species)+
+  labs(x="height (cm)")
+```
+```{r}
+summary_palmetto <- palmetto %>% 
+  group_by(species) %>% 
+  summarize(mean = mean(height, na.rm=TRUE),
+            sd = sd(height, na.rm=TRUE),
+            #median = median(weight, na.rm=TRUE),
+            n = n()
+            )
+```
+
+```{r}
+
 ```
 
 
