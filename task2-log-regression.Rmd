@@ -7,4 +7,29 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
 ```
+
+
+
+```{r}
+palmetto <- read_csv("palmetto.csv") %>% 
+  select(species, height:green_lvs) %>% 
+  mutate(species = case_when( species==1 ~ "serenoa repens",
+                              species==2 ~ "sabal etonia"))
+```
+
+
+```{r}
+#ggplot(data=palmetto, aes(x=species, y=height))+
+```
+
+```{r}
+ggplot(data=palmetto, aes(x=height, y=length))+
+  geom_point( cex=0.2, alpha=0.2)+
+  facet_wrap(~species)
+  
+```
+
+
