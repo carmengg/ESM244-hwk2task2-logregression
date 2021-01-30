@@ -1,0 +1,10 @@
+---
+title: "task2-logregression"
+author: "Carmen Galaz-García"
+date: "1/29/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
