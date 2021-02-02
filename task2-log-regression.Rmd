@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning=FALSE)
 
 library(tidyverse)
 library(broom)
+library(kableExtra)  # create nice tables
 
 ```
 
@@ -17,8 +18,8 @@ library(broom)
 
 ```{r}
 # --- DATA SELECTION ---- 
-raw_palmetto <- read_csv("palmetto.csv") %>% 
-  count(year,plant)
+raw_palmetto <- read_csv("palmetto.csv")
+
 palmetto <- raw_palmetto%>% 
   select(species, height:green_lvs) %>% 
   mutate(species = case_when( species==1 ~ "serenoa repens",
@@ -35,23 +36,34 @@ ggplot(data=palmetto, aes(x=length, y=width))+
   geom_point( cex=0.3, alpha=0.2)+
   facet_wrap(~species)+
   labs( x= "length (cm)",
-        y= "width (cm)")+
+        y= "width (cm)"
+       #title = expression(paste(
+        # "Canopy dimensions in ",
+        # italic("sabal etonia"),
+        # " and ",
+        # italic("serenoa repens")))
+        )+
   theme_light()
   
 ```
 
-**Fig 1.** . Relationship between widest length of the canopy (cm) and widest width of the canopy perpendicular to the canopy length (cm) of the palmetto plant species *sabal etonia* and *serenoa repens*. Each point indicates measurements of an individual plant at one of . Data: Kielland et al. (2017)
+**Figure 1.** Relationship between widest length of the canopy (cm) and widest width of the canopy perpendicular to the canopy length (cm) of the palmetto plant species *sabal etonia* and *serenoa repens*. Each point indicates measurements of an individual plant. Data: Abrahamson (2019)
 
 
 ```{r}
+# --- GRAPH 1: NUMBER OF LEAVES HISTOGRAM  ---
 ggplot(data=palmetto, aes(x=green_lvs))+
   geom_histogram(binwidth = 1)+
   facet_wrap(~species)+
   labs( x = "number of green leaves (n)",
-        y = "count")
+        y = "count")+
+  theme_light()
 ```
 
+**Figure 2.** Histograms of number of green leaves (n) in the palmetto plant species *sabal etonia* and *serenoa repens*. Data: Abrahamson (2019)
+
 ```{r}
+# --- GRAPH 3: 
 summary_palmetto <- palmetto %>% 
   group_by(species) %>% 
   summarize(mean = mean(height, na.rm=TRUE),
@@ -62,30 +74,51 @@ summary_palmetto <- palmetto %>%
 
 ggplot(data=palmetto, aes(x=species, y=height))+
   geom_boxplot()+
-  geom_jitter(color="black", size=0.4, alpha=0.2)
+  geom_jitter(color="forestgreen", size=0.4, alpha=0.2) +
+  labs(y = "height (cm)")
 
 ```
 
+**Figure 3.** Height (cm) of the palmetto plant species *sabal etonia* and *serenoa repens*. Each green point indicates the height of an individual plant. 
+Box endpoints indicate the 25th and 75th percentile values, the black line within the box indicate the median for each species. 
+Black points at the end of the boxes indicate possible outliers. 
+Data: Abrahamson (2019)
 
 ## Binary logistic equation
 
 
 ```{r}
-palmetto_blr <- glm(species ~ height + length + width + green_lvs, 
-                            data = palmetto_factor,
+blr_palmetto <- glm(species ~ height + length + width + green_lvs, 
+                            data = palmetto,
                             family = "binomial") #specify model is BLR
 
-palmetto_blr
-summary(palmetto_blr)
-tidy(palmetto_blr)
+blr_palmetto
+summary(blr_palmetto)
+tidy(blr_palmetto)
 ```
 ```{r}
-blr_fitted_palmetto <- palmetto_blr %>% 
+results_blr <- blr_palmetto %>% 
   broom::augment(type.predict="response") %>% # calculate probability for each outcome
   select(species,.fitted) %>% 
-  mutate(classification = case_when( .fitted>0.5 & species=="serenoa repens"~ TRUE,
-                                     .fitted<=0.5 & species=="serenoa repens"~ FALSE,
-                                     .fitted>0.5 & species=="sabal etonia"~ FALSE,
-                                     .fitted<=0.5 & species=="sabal etonia"~ TRUE)) %>% count(species, classification)
+  mutate(classification = case_when( .fitted>0.5 & species=="serenoa repens"~ "True",
+                                     .fitted<=0.5 & species=="serenoa repens"~ "False",
+                                     .fitted>0.5 & species=="sabal etonia"~ "False",
+                                     .fitted<=0.5 & species=="sabal etonia"~ "True")) %>% 
+  count(species, classification) %>% 
+  mutate(percentage = case_when( 
+    species == "sabal etonia" ~ scales::percent(n/(454+5701),accuracy = 0.01),
+    species == "serenoa repens" ~ scales::percent(n/(564+5548),accuracy = 0.01))
+    ) %>% 
+  kable( col.names = c("Species", 
+                        "Correctly classified by model", 
+                        "Count",
+                       "Percentage") 
+                         ) %>% 
+   kable_styling(full_width = FALSE)
+results_blr
+```
+```{r}
+    species == "sabal etonia" ~ scales::percent(round(n/6245*100,2)),
+    species == "serenoa repens" ~ scales::percent(round(n/6215,2)))
 ```
 
