@@ -84,18 +84,34 @@ Box endpoints indicate the 25th and 75th percentile values, the black line withi
 Black points at the end of the boxes indicate possible outliers. 
 Data: Abrahamson (2019)
 
-## Binary logistic equation
 
+## Binary logistic regression
 
 ```{r}
 blr_palmetto <- glm(species ~ height + length + width + green_lvs, 
                             data = palmetto,
                             family = "binomial") #specify model is BLR
 
-blr_palmetto
-summary(blr_palmetto)
-tidy(blr_palmetto)
+blr_model <- tidy(blr_palmetto) %>% 
+  mutate(pvalue = "< 0.001") %>% 
+  mutate(term = c("y-intercept", 
+                  "height (cm)", 
+                  "length (cm)", 
+                  "width (cm)", 
+                  "number of green leaves (n)")
+         ) %>% 
+  select(!statistic & !p.value)%>%
+  kable( col.names = c("Variable", 
+                        "Coefficient", 
+                        "Standard error",
+                        "p-value") 
+                         ) %>% 
+   kable_styling(full_width = FALSE)
+blr_model
 ```
+
+## Model accuracy
+
 ```{r}
 results_blr <- blr_palmetto %>% 
   broom::augment(type.predict="response") %>% # calculate probability for each outcome
@@ -116,9 +132,5 @@ results_blr <- blr_palmetto %>%
                          ) %>% 
    kable_styling(full_width = FALSE)
 results_blr
-```
-```{r}
-    species == "sabal etonia" ~ scales::percent(round(n/6245*100,2)),
-    species == "serenoa repens" ~ scales::percent(round(n/6215,2)))
 ```
 
